@@ -23,9 +23,10 @@ False
 >>> del server['python-tests']
 """
 
-import httplib2
+#import httplib2
+import pycurl
 import mimetypes
-from urllib import quote, urlencode
+#from urllib import quote, urlencode
 from types import FunctionType
 from inspect import getsource
 from textwrap import dedent
@@ -105,9 +106,10 @@ class Server(object):
         :param timeout: socket timeout in number of seconds, or `None` for no
                         timeout
         """
-        http = httplib2.Http(cache=cache, timeout=timeout)
-        http.force_exception_to_status_code = False
-        self.resource = Resource(http, uri)
+        #http = httplib2.Http(cache=cache, timeout=timeout)
+        #http.force_exception_to_status_code = False
+        curl = pycurl.Curl()
+        self.resource = Resource(curl, uri)
 
     def __contains__(self, name):
         """Return whether the server contains a database with the specified
@@ -999,15 +1001,15 @@ class Row(dict):
 
 class Resource(object):
 
-    def __init__(self, http, uri):
-        if http is None:
-            http = httplib2.Http()
-            http.force_exception_to_status_code = False
-        self.http = http
+    def __init__(self, curl, uri):
+        if curl is None:
+            curl = pycurl.Curl()
+            #http.force_exception_to_status_code = False
+        self.curl = curl
         self.uri = uri
 
     def __call__(self, path):
-        return type(self)(self.http, uri(self.uri, path))
+        return type(self)(self.curl, uri(self.uri, path))
 
     def delete(self, path=None, headers=None, **params):
         return self._request('DELETE', path, headers=headers, **params)
@@ -1029,22 +1031,28 @@ class Resource(object):
     def _request(self, method, path=None, content=None, headers=None,
                  **params):
         from couchdb import __version__
-        headers = headers or {}
-        headers.setdefault('Accept', 'application/json')
-        headers.setdefault('User-Agent', 'couchdb-python %s' % __version__)
+        #headers = headers or {}
+        #headers.setdefault('Accept', 'application/json')
+        self.curl.setopt(pycurl.HTTPHEADER, ["Accept: application/json"])
+        #headers.setdefault('User-Agent', 'couchdb-python %s' % __version__)
+        self.curl.setopt(pycurl.HTTPHEADER, ["User-Agent: couchdb-python-curl %s" % __version__])
         body = None
         if content is not None:
             if not isinstance(content, basestring):
                 body = json.encode(content).encode('utf-8')
-                headers.setdefault('Content-Type', 'application/json')
+                #headers.setdefault('Content-Type', 'application/json')
+                self.curl.setopt(pycurl.HTTPHEADER, ["Content-Type: application/json"])
             else:
                 body = content
-            headers.setdefault('Content-Length', str(len(body)))
+            #headers.setdefault('Content-Length', str(len(body)))
+            self.curl.setopt(pycurl.HTTPHEADER, ["Content-Length: %s" % str(len(body))])
 
         def _make_request(retry=1):
             try:
-                return self.http.request(uri(self.uri, path, **params), method,
-                                             body=body, headers=headers)
+                self.curl.setopt(pycurl.URL, (uri(self.uri, path, **params))
+                #TODO: add method and body, then perform request
+                #return self.curl.request(uri(self.uri, path, **params), method,
+                #                             body=body, headers=headers)
             except socket.error, e:
                 if retry > 0 and e.args[0] == 54: # reset by peer
                     return _make_request(retry - 1)
