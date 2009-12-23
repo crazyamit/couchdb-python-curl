@@ -126,12 +126,14 @@ class Server(object):
 
     def __iter__(self):
         """Iterate over the names of all databases."""
-        resp, data = self.resource.get('_all_dbs')
+        #resp, data = self.resource.get('_all_dbs')
+        data = self.resource.get('_all_dbs')
         return iter(data)
 
     def __len__(self):
         """Return the number of databases."""
-        resp, data = self.resource.get('_all_dbs')
+        #resp, data = self.resource.get('_all_dbs')
+        data = self.resource.get('_all_dbs')
         return len(data)
 
     def __nonzero__(self):
@@ -162,6 +164,7 @@ class Server(object):
         :rtype: `Database`
         :raise ResourceNotFound: if no database with that name exists
         """
+        #TODO: continue to Database modification
         db = Database(uri(self.resource.uri, name), validate_dbname(name),
                       http=self.resource.http)
         db.resource.head() # actually make a request to the database
@@ -1031,6 +1034,16 @@ class Resource(object):
     def _request(self, method, path=None, content=None, headers=None,
                  **params):
         from couchdb import __version__
+
+        if method in ("PUT", "POST"):
+            if method == "POST":
+                self.curl.setopt(pycurl.POST, 1)
+            else:
+                self.curl.setopt(pycurl.CUSTOMREQUEST, method)
+                self.curl.setopt(pycurl.POSTFIELDS, body)
+        elif method in ("DELETE", "HEAD"):
+            self.curl.setopt(pycurl.CUSTOMREQUEST, method)
+
         #headers = headers or {}
         #headers.setdefault('Accept', 'application/json')
         self.curl.setopt(pycurl.HTTPHEADER, ["Accept: application/json"])
@@ -1048,19 +1061,35 @@ class Resource(object):
             self.curl.setopt(pycurl.HTTPHEADER, ["Content-Length: %s" % str(len(body))])
 
         def _make_request(retry=1):
+            
+            if method in ("PUT", "POST"):
+                if method == "POST":
+                    self.curl.setopt(pycurl.POST, 1)
+                else:
+                    self.curl.setopt(pycurl.CUSTOMREQUEST, method)
+                self.curl.setopt(pycurl.POSTFIELDS, body)
+            elif method in ("DELETE", "HEAD"):
+                self.curl.setopt(pycurl.CUSTOMREQUEST, method)
+            
             try:
                 self.curl.setopt(pycurl.URL, (uri(self.uri, path, **params))
-                #TODO: add method and body, then perform request
-                #return self.curl.request(uri(self.uri, path, **params), method,
+                self.curl.setopt()
+                #return self.http.request(uri(self.uri, path, **params), method,
                 #                             body=body, headers=headers)
+                return self.curl.perform()
+            #TODO: pycurl doesn't seem to raise socket exceptions
             except socket.error, e:
                 if retry > 0 and e.args[0] == 54: # reset by peer
                     return _make_request(retry - 1)
                 raise
-        resp, data = _make_request()
-
-        status_code = int(resp.status)
-        if data and resp.get('content-type') == 'application/json':
+        
+        data = _make_request()
+        status_code = curl.getinfo(pycurl.HTTP_CODE)
+        #status_code = int(resp.status)
+        
+        #if data and resp.get('content-type') == 'application/json':
+        # strange, but pycurl returns 'text/plain' rather than 'application/json'
+        if data and curl.getinfo(pycurl.CONTENT_TYPE) == 'text/plain;charset=utf-8'
             try:
                 data = json.decode(data)
             except ValueError:
@@ -1080,7 +1109,8 @@ class Resource(object):
             else:
                 raise ServerError((status_code, error))
 
-        return resp, data
+        #return resp, data
+        return data
 
 
 def uri(base, *path, **query):
