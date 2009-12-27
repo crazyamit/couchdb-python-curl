@@ -166,7 +166,7 @@ class Server(object):
         """
         #TODO: continue to Database modification
         db = Database(uri(self.resource.uri, name), validate_dbname(name),
-                      http=self.resource.http)
+                      curl=self.resource.curl)
         db.resource.head() # actually make a request to the database
         return db
 
@@ -284,8 +284,8 @@ class Database(object):
     >>> del server['python-tests']
     """
 
-    def __init__(self, uri, name=None, http=None):
-        self.resource = Resource(http, uri)
+    def __init__(self, uri, name=None, curl=None):
+        self.resource = Resource(curl, uri)
         self._name = name
 
     def __repr__(self):
@@ -632,7 +632,7 @@ class Database(object):
         """
         return TemporaryView(uri(self.resource.uri, '_temp_view'), map_fun,
                              reduce_fun, language=language, wrapper=wrapper,
-                             http=self.resource.http)(**options)
+                             curl=self.resource.curl)(**options)
 
     def update(self, documents, **options):
         """Perform a bulk update or insertion of the given documents using a
@@ -731,7 +731,7 @@ class Database(object):
             name = '/'.join(['_design', design, '_view', name])
         return PermanentView(uri(self.resource.uri, *name.split('/')), name,
                              wrapper=wrapper,
-                             http=self.resource.http)(**options)
+                             curl=self.resource.curl)(**options)
 
 
 class Document(dict):
@@ -766,8 +766,8 @@ class Document(dict):
 class View(object):
     """Abstract representation of a view or query."""
 
-    def __init__(self, uri, wrapper=None, http=None):
-        self.resource = Resource(http, uri)
+    def __init__(self, uri, wrapper=None, curl=None):
+        self.resource = Resource(curl, uri)
         self.wrapper = wrapper
 
     def __call__(self, **options):
@@ -792,8 +792,8 @@ class View(object):
 class PermanentView(View):
     """Representation of a permanent view on the server."""
 
-    def __init__(self, uri, name, wrapper=None, http=None):
-        View.__init__(self, uri, wrapper=wrapper, http=http)
+    def __init__(self, uri, name, wrapper=None, curl=None):
+        View.__init__(self, uri, wrapper=wrapper, curl=curl)
         self.name = name
 
     def __repr__(self):
@@ -814,8 +814,8 @@ class TemporaryView(View):
     """Representation of a temporary view."""
 
     def __init__(self, uri, map_fun, reduce_fun=None,
-                 language='javascript', wrapper=None, http=None):
-        View.__init__(self, uri, wrapper=wrapper, http=http)
+                 language='javascript', wrapper=None, curl=None):
+        View.__init__(self, uri, wrapper=wrapper, curl=curl)
         if isinstance(map_fun, FunctionType):
             map_fun = getsource(map_fun).rstrip('\n\r')
         self.map_fun = dedent(map_fun.lstrip('\n\r'))
@@ -1077,7 +1077,6 @@ class Resource(object):
                 #return self.http.request(uri(self.uri, path, **params), method,
                 #                             body=body, headers=headers)
                 return self.curl.perform()
-            #TODO: pycurl doesn't seem to raise socket exceptions
             except socket.error, e:
                 if retry > 0 and e.args[0] == 54: # reset by peer
                     return _make_request(retry - 1)
