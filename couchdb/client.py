@@ -26,13 +26,15 @@ False
 #import httplib2
 import pycurl
 import mimetypes
-#from urllib import quote, urlencode
+from urllib import quote, urlencode
 from types import FunctionType
 from inspect import getsource
 from textwrap import dedent
 import re
 import socket
+import sys
 
+from cStringIO import StringIO
 from couchdb import json
 
 __all__ = ['PreconditionFailed', 'ResourceNotFound', 'ResourceConflict',
@@ -164,7 +166,6 @@ class Server(object):
         :rtype: `Database`
         :raise ResourceNotFound: if no database with that name exists
         """
-        #TODO: continue to Database modification
         db = Database(uri(self.resource.uri, name), validate_dbname(name),
                       curl=self.resource.curl)
         db.resource.head() # actually make a request to the database
@@ -1062,6 +1063,8 @@ class Resource(object):
 
         def _make_request(retry=1):
             
+            stringbuf = StringIO()
+            
             if method in ("PUT", "POST"):
                 if method == "POST":
                     self.curl.setopt(pycurl.POST, 1)
@@ -1072,11 +1075,15 @@ class Resource(object):
                 self.curl.setopt(pycurl.CUSTOMREQUEST, method)
             
             try:
-                self.curl.setopt(pycurl.URL, (uri(self.uri, path, **params))
-                self.curl.setopt()
+                self.curl.setopt(pycurl.URL, (uri(self.uri, path, **params)))
                 #return self.http.request(uri(self.uri, path, **params), method,
                 #                             body=body, headers=headers)
-                return self.curl.perform()
+                self.curl.setopt(pycurl.WRITEFUNCTION, stringbuf.write)
+                self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
+                self.curl.setopt(pycurl.MAXREDIRS, 5)
+                self.curl.perform()
+                stringbuf.seek(0)
+                return stringbuf.read()
             except socket.error, e:
                 if retry > 0 and e.args[0] == 54: # reset by peer
                     return _make_request(retry - 1)
@@ -1087,7 +1094,7 @@ class Resource(object):
         #status_code = int(resp.status)
         
         #if data and resp.get('content-type') == 'application/json':
-        if data and curl.getinfo(pycurl.CONTENT_TYPE) == 'application/json'
+        if data and curl.getinfo(pycurl.CONTENT_TYPE) == 'application/json':
             try:
                 data = json.decode(data)
             except ValueError:
@@ -1108,7 +1115,7 @@ class Resource(object):
                 raise ServerError((status_code, error))
 
         #return resp, data
-        #TODO: close handlers
+        curl.close()
         return data
 
 
