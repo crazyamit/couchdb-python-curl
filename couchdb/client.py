@@ -1088,8 +1088,7 @@ class Resource(object):
         #status_code = int(resp.status)
         
         #if data and resp.get('content-type') == 'application/json':
-        # strange, but pycurl returns 'text/plain' rather than 'application/json'
-        if data and curl.getinfo(pycurl.CONTENT_TYPE) == 'text/plain;charset=utf-8'
+        if data and curl.getinfo(pycurl.CONTENT_TYPE) == 'application/json'
             try:
                 data = json.decode(data)
             except ValueError:
@@ -1110,6 +1109,7 @@ class Resource(object):
                 raise ServerError((status_code, error))
 
         #return resp, data
+        #TODO: close handlers
         return data
 
 
