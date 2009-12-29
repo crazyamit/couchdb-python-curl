@@ -1012,6 +1012,9 @@ class Resource(object):
         self.curl = curl
         self.uri = uri
 
+    def __del__(self):
+        self.curl.close()
+
     def __call__(self, path):
         return type(self)(self.curl, uri(self.uri, path))
 
@@ -1044,6 +1047,8 @@ class Resource(object):
                 self.curl.setopt(pycurl.POSTFIELDS, body)
         elif method in ("DELETE", "HEAD"):
             self.curl.setopt(pycurl.CUSTOMREQUEST, method)
+            if method == 'HEAD':
+                self.curl.setopt(pycurl.NOBODY, True)
 
         #headers = headers or {}
         #headers.setdefault('Accept', 'application/json')
@@ -1090,11 +1095,11 @@ class Resource(object):
                 raise
         
         data = _make_request()
-        status_code = curl.getinfo(pycurl.HTTP_CODE)
+        status_code = self.curl.getinfo(pycurl.HTTP_CODE)
         #status_code = int(resp.status)
         
         #if data and resp.get('content-type') == 'application/json':
-        if data and curl.getinfo(pycurl.CONTENT_TYPE) == 'application/json':
+        if data and self.curl.getinfo(pycurl.CONTENT_TYPE) == 'application/json':
             try:
                 data = json.decode(data)
             except ValueError:
@@ -1115,7 +1120,7 @@ class Resource(object):
                 raise ServerError((status_code, error))
 
         #return resp, data
-        curl.close()
+        #self.curl.close()
         return data
 
 
