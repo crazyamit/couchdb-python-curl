@@ -181,7 +181,7 @@ class Server(object):
 
         :type: `dict`
         """
-        resp, data = self.resource.get('_config')
+        data = self.resource.get('_config')
         return data
 
     @property
@@ -192,17 +192,17 @@ class Server(object):
         to check for the availability of the server.
 
         :type: `unicode`"""
-        resp, data = self.resource.get()
+        data = self.resource.get()
         return data['version']
 
     def stats(self):
         """Database statistics."""
-        resp, data = self.resource.get('_stats')
+        data = self.resource.get('_stats')
         return data
 
     def tasks(self):
         """A list of tasks currently active on the server."""
-        resp, data = self.resource.get('_active_tasks')
+        data = self.resource.get('_active_tasks')
         return data
 
     def create(self, name):
@@ -234,7 +234,7 @@ class Server(object):
         """
         data = {'source': source, 'target': target}
         data.update(options)
-        resp, data = self.resource.post('_replicate', data)
+        data = self.resource.post('_replicate', data)
         return data
 
 
@@ -311,7 +311,7 @@ class Database(object):
 
     def __len__(self):
         """Return the number of documents in the database."""
-        resp, data = self.resource.get()
+        data = self.resource.get()
         return data['doc_count']
 
     def __nonzero__(self):
@@ -327,7 +327,7 @@ class Database(object):
 
         :param id: the document ID
         """
-        resp, data = self.resource.head(id)
+        data = self.resource.head(id)
         self.resource.delete(id, rev=resp['etag'].strip('"'))
 
     def __getitem__(self, id):
@@ -337,7 +337,7 @@ class Database(object):
         :return: a `Row` object representing the requested document
         :rtype: `Document`
         """
-        resp, data = self.resource.get(id)
+        data = self.resource.get(id)
         return Document(data)
 
     def __setitem__(self, id, content):
@@ -348,7 +348,7 @@ class Database(object):
                         new documents, or a `Row` object for existing
                         documents
         """
-        resp, data = self.resource.put(id, content=content)
+        data = self.resource.put(id, content=content)
         content.update({'_id': data['id'], '_rev': data['rev']})
 
     @property
@@ -386,7 +386,7 @@ class Database(object):
         :return: the ID of the created document
         :rtype: `unicode`
         """
-        resp, data = self.resource.post(content=data)
+        data = self.resource.post(content=data)
         return data['id']
 
     def compact(self):
@@ -398,7 +398,7 @@ class Database(object):
                  successfully
         :rtype: `bool`
         """
-        resp, data = self.resource.post('_compact')
+        data = self.resource.post('_compact')
         return data['ok']
 
     def copy(self, src, dest):
@@ -435,8 +435,8 @@ class Database(object):
             else:
                 dest = unicode_quote(dest['_id'])
 
-        resp, data = self.resource._request('COPY', src,
-                                            headers={'Destination': dest})
+        data = self.resource._request('COPY', src,
+                                      headers={'Destination': dest})
         return data['rev']
 
     def delete(self, doc):
@@ -479,7 +479,7 @@ class Database(object):
         :rtype: `Document`
         """
         try:
-            resp, data = self.resource.get(id, **options)
+            data = self.resource.get(id, **options)
         except ResourceNotFound:
             return default
         else:
@@ -493,7 +493,7 @@ class Database(object):
                  in reverse chronological order, if any were found
         """
         try:
-            resp, data = self.resource.get(id, revs=True)
+            data = self.resource.get(id, revs=True)
         except ResourceNotFound:
             return
 
@@ -515,7 +515,7 @@ class Database(object):
         :rtype: ``dict``
         :since: 0.4
         """
-        resp, data = self.resource.get()
+        data = self.resource.get()
         self._name = data['db_name']
         return data
 
@@ -531,7 +531,7 @@ class Database(object):
         :param filename: the name of the attachment file
         :since: 0.4.1
         """
-        resp, data = self.resource(doc['_id']).delete(filename, rev=doc['_rev'])
+        data = self.resource(doc['_id']).delete(filename, rev=doc['_rev'])
         doc['_rev'] = data['rev']
 
     def get_attachment(self, id_or_doc, filename, default=None):
@@ -552,7 +552,7 @@ class Database(object):
         else:
             id = id_or_doc['_id']
         try:
-            resp, data = self.resource(id).get(filename)
+            data = self.resource(id).get(filename)
             return data
         except ResourceNotFound:
             return default
@@ -586,7 +586,7 @@ class Database(object):
         if content_type is None:
             content_type = ';'.join(filter(None, mimetypes.guess_type(filename)))
 
-        resp, data = self.resource(doc['_id']).put(filename, content=content,
+        data = self.resource(doc['_id']).put(filename, content=content,
                                                    headers={
             'Content-Type': content_type
         }, rev=doc['_rev'])
@@ -684,7 +684,7 @@ class Database(object):
 
         content = options
         content.update(docs=docs)
-        resp, data = self.resource.post('_bulk_docs', content=content)
+        data = self.resource.post('_bulk_docs', content=content)
 
         results = []
         for idx, result in enumerate(data):
@@ -804,10 +804,10 @@ class PermanentView(View):
         if 'keys' in options:
             options = options.copy()
             keys = {'keys': options.pop('keys')}
-            resp, data = self.resource.post(content=keys,
+            data = self.resource.post(content=keys,
                                             **self._encode_options(options))
         else:
-            resp, data = self.resource.get(**self._encode_options(options))
+            data = self.resource.get(**self._encode_options(options))
         return data
 
 
@@ -839,7 +839,7 @@ class TemporaryView(View):
             options = options.copy()
             body['keys'] = options.pop('keys')
         content = json.encode(body).encode('utf-8')
-        resp, data = self.resource.post(content=content, headers={
+        data = self.resource.post(content=content, headers={
             'Content-Type': 'application/json'
         }, **self._encode_options(options))
         return data
