@@ -110,8 +110,8 @@ class Server(object):
         """
         #http = httplib2.Http(cache=cache, timeout=timeout)
         #http.force_exception_to_status_code = False
-        curl = pycurl.Curl()
-        self.resource = Resource(curl, uri)
+        #curl = pycurl.Curl()
+        self.resource = Resource(uri)
 
     def __contains__(self, name):
         """Return whether the server contains a database with the specified
@@ -166,8 +166,7 @@ class Server(object):
         :rtype: `Database`
         :raise ResourceNotFound: if no database with that name exists
         """
-        db = Database(uri(self.resource.uri, name), validate_dbname(name),
-                      curl=self.resource.curl)
+        db = Database(uri(self.resource.uri, name), validate_dbname(name))
         db.resource.head() # actually make a request to the database
         return db
 
@@ -285,8 +284,8 @@ class Database(object):
     >>> del server['python-tests']
     """
 
-    def __init__(self, uri, name=None, curl=None):
-        self.resource = Resource(curl, uri)
+    def __init__(self, uri, name=None):
+        self.resource = Resource(uri)
         self._name = name
 
     def __repr__(self):
@@ -338,6 +337,9 @@ class Database(object):
         :rtype: `Document`
         """
         data = self.resource.get(id)
+        #print 'getitem, data', len(data), data
+        #print 'aaaaaaa', data, type(data)
+        d = Document(data)
         return Document(data)
 
     def __setitem__(self, id, content):
@@ -1005,18 +1007,17 @@ class Row(dict):
 
 class Resource(object):
 
-    def __init__(self, curl, uri):
-        if curl is None:
-            curl = pycurl.Curl()
-            #http.force_exception_to_status_code = False
-        self.curl = curl
+    def __init__(self, uri):
+        #self.curl = pycurl.Curl()
         self.uri = uri
 
     def __del__(self):
-        self.curl.close()
+        #self.curl.close()
+        pass
 
+    # temporary commented out. Is there anyone uses it?
     def __call__(self, path):
-        return type(self)(self.curl, uri(self.uri, path))
+        return type(self)(uri(self.uri, path))
 
     def delete(self, path=None, headers=None, **params):
         return self._request('DELETE', path, headers=headers, **params)
@@ -1037,56 +1038,31 @@ class Resource(object):
 
     def _request(self, method, path=None, content=None, headers=None,
                  **params):
-        from couchdb import __version__
 
-        if method in ("PUT", "POST"):
-            if method == "POST":
-                self.curl.setopt(pycurl.POST, 1)
-            else:
-                self.curl.setopt(pycurl.CUSTOMREQUEST, method)
-                self.curl.setopt(pycurl.POSTFIELDS, body)
-        elif method in ("DELETE", "HEAD"):
-            self.curl.setopt(pycurl.CUSTOMREQUEST, method)
-            if method == 'HEAD':
-                self.curl.setopt(pycurl.NOBODY, True)
-
-        #headers = headers or {}
-        #headers.setdefault('Accept', 'application/json')
-        self.curl.setopt(pycurl.HTTPHEADER, ["Accept: application/json"])
-        #headers.setdefault('User-Agent', 'couchdb-python %s' % __version__)
-        self.curl.setopt(pycurl.HTTPHEADER, ["User-Agent: couchdb-python-curl %s" % __version__])
-        body = None
-        if content is not None:
-            if not isinstance(content, basestring):
-                body = json.encode(content).encode('utf-8')
-                #headers.setdefault('Content-Type', 'application/json')
-                self.curl.setopt(pycurl.HTTPHEADER, ["Content-Type: application/json"])
-            else:
-                body = content
-            #headers.setdefault('Content-Length', str(len(body)))
-            self.curl.setopt(pycurl.HTTPHEADER, ["Content-Length: %s" % str(len(body))])
-
-        def _make_request(retry=1):
+        def _make_request(curl, path, params, retry = 1):
             
             stringbuf = StringIO()
             
             if method in ("PUT", "POST"):
                 if method == "POST":
-                    self.curl.setopt(pycurl.POST, 1)
+                    curl.setopt(pycurl.POST, 1)
                 else:
-                    self.curl.setopt(pycurl.CUSTOMREQUEST, method)
-                self.curl.setopt(pycurl.POSTFIELDS, body)
+                    curl.setopt(pycurl.CUSTOMREQUEST, method)
+                curl.setopt(pycurl.POSTFIELDS, body)
             elif method in ("DELETE", "HEAD"):
-                self.curl.setopt(pycurl.CUSTOMREQUEST, method)
+                curl.setopt(pycurl.CUSTOMREQUEST, method)
+                if method == 'HEAD':
+                    curl.setopt(pycurl.NOBODY, True)
             
             try:
-                self.curl.setopt(pycurl.URL, (uri(self.uri, path, **params)))
+                curl.setopt(pycurl.URL, (uri(self.uri, path, **params)))
                 #return self.http.request(uri(self.uri, path, **params), method,
                 #                             body=body, headers=headers)
-                self.curl.setopt(pycurl.WRITEFUNCTION, stringbuf.write)
-                self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
-                self.curl.setopt(pycurl.MAXREDIRS, 5)
-                self.curl.perform()
+                curl.setopt(pycurl.WRITEFUNCTION, stringbuf.write)
+                curl.setopt(pycurl.FOLLOWLOCATION, 1)
+                curl.setopt(pycurl.MAXREDIRS, 5)
+                curl.perform()
+                #print curl.getinfo(pycurl.CONTENT_TYPE)
                 stringbuf.seek(0)
                 return stringbuf.read()
             except socket.error, e:
@@ -1094,12 +1070,49 @@ class Resource(object):
                     return _make_request(retry - 1)
                 raise
         
-        data = _make_request()
-        status_code = self.curl.getinfo(pycurl.HTTP_CODE)
+
+        from couchdb import __version__
+
+        curl = pycurl.Curl()
+        
+        ## if method in ("PUT", "POST"):
+        ##     if method == "POST":
+        ##         self.curl.setopt(pycurl.POST, 1)
+        ##     else:
+        ##         curl.setopt(pycurl.CUSTOMREQUEST, method)
+        ##         curl.setopt(pycurl.POSTFIELDS, body)
+        ## elif method in ("DELETE", "HEAD"):
+        ##     curl.setopt(pycurl.CUSTOMREQUEST, method)
+        ##     if method == 'HEAD':
+        ##         curl.setopt(pycurl.NOBODY, True)
+
+        headers = headers or {}
+        headers.setdefault('Accept', 'application/json')
+        headers["User-Agent"] = "couchdb-python-curl %s" % __version__
+  
+       
+        #curl.setopt(pycurl.HTTPHEADER, headers)
+        #headers.setdefault('User-Agent', 'couchdb-python %s' % __version__)
+        #curl.setopt(pycurl.HTTPHEADER, [])
+        body = None
+        if content is not None:
+            if not isinstance(content, basestring):
+                body = json.encode(content).encode('utf-8')
+                #headers.setdefault('Content-Type', 'application/json')
+                #curl.setopt(pycurl.HTTPHEADER, ["Content-Type: application/json"])
+            else:
+                body = content
+            headers.setdefault('Content-Length', str(len(body)))
+            #curl.setopt(pycurl.HTTPHEADER, ["Content-Length: %s" % str(len(body))])
+
+        curl.setopt(pycurl.HTTPHEADER, ['%s: %s' % (key, headers[key]) for key in headers])
+        data = _make_request(curl, path, params)
+        status_code = curl.getinfo(pycurl.HTTP_CODE)
         #status_code = int(resp.status)
+
         
         #if data and resp.get('content-type') == 'application/json':
-        if data and self.curl.getinfo(pycurl.CONTENT_TYPE) == 'application/json':
+        if data and curl.getinfo(pycurl.CONTENT_TYPE) == 'application/json':
             try:
                 data = json.decode(data)
             except ValueError:
@@ -1120,7 +1133,8 @@ class Resource(object):
                 raise ServerError((status_code, error))
 
         #return resp, data
-        #self.curl.close()
+        curl.close()
+        
         return data
 
 
