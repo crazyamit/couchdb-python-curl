@@ -733,8 +733,7 @@ class Database(object):
             design, name = name.split('/', 1)
             name = '/'.join(['_design', design, '_view', name])
         return PermanentView(uri(self.resource.uri, *name.split('/')), name,
-                             wrapper=wrapper,
-                             curl=self.resource.curl)(**options)
+                             wrapper=wrapper)(**options)
 
 
 class Document(dict):
@@ -769,8 +768,8 @@ class Document(dict):
 class View(object):
     """Abstract representation of a view or query."""
 
-    def __init__(self, uri, wrapper=None, curl=None):
-        self.resource = Resource(curl, uri)
+    def __init__(self, uri, wrapper=None):
+        self.resource = Resource(uri)
         self.wrapper = wrapper
 
     def __call__(self, **options):
@@ -795,8 +794,8 @@ class View(object):
 class PermanentView(View):
     """Representation of a permanent view on the server."""
 
-    def __init__(self, uri, name, wrapper=None, curl=None):
-        View.__init__(self, uri, wrapper=wrapper, curl=curl)
+    def __init__(self, uri, name, wrapper=None):
+        View.__init__(self, uri, wrapper=wrapper)
         self.name = name
 
     def __repr__(self):
@@ -1055,7 +1054,8 @@ class Resource(object):
                     curl.setopt(pycurl.NOBODY, True)
             
             try:
-                curl.setopt(pycurl.URL, (uri(self.uri, path, **params)))
+                #print "Curl setopt url", uri(self.uri, path, **params), self.uri, path, params
+                curl.setopt(pycurl.URL, uri(self.uri, path, **params).encode('utf-8'))
                 #return self.http.request(uri(self.uri, path, **params), method,
                 #                             body=body, headers=headers)
                 curl.setopt(pycurl.WRITEFUNCTION, stringbuf.write)
