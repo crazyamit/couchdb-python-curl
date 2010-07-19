@@ -340,7 +340,7 @@ class Database(object):
         #print 'getitem, data', len(data), data
         #print 'aaaaaaa', data, type(data)
         #d = Document(data)
-        return Document(data)
+        return Document(data, _db  = self)
 
     def __setitem__(self, id, content):
         """Create or update a document with the specified ID.
@@ -350,8 +350,10 @@ class Database(object):
                         new documents, or a `Row` object for existing
                         documents
         """
+        if '_db' in content:
+            del(content['_db'])
         data = self.resource.put(id, content=content)
-        content.update({'_id': data['id'], '_rev': data['rev']})
+        content.update({'_id': data['id'], '_rev': data['rev'], '_db': self})
 
     @property
     def name(self):
@@ -485,7 +487,7 @@ class Database(object):
         except ResourceNotFound:
             return default
         else:
-            return Document(data)
+            return Document(data, _db = self)
 
     def revisions(self, id, **options):
         """Return all available revisions of the given document.
@@ -743,6 +745,12 @@ class Document(dict):
     `id` and `rev`, which contain the document ID and revision, respectively.
     """
 
+    def __init__(self, *args, **kwargs):
+        if '_db' in kwargs:
+            self._db = kwargs['_db']
+            del(kwargs['_db'])
+        dict.__init__(self, *args, **kwargs)
+
     def __repr__(self):
         return '<%s %r@%r %r>' % (type(self).__name__, self.id, self.rev,
                                   dict([(k,v) for k,v in self.items()
@@ -770,11 +778,19 @@ class Document(dict):
         else:
             raise AttributeError(u'Field %s is undefined in this document' % name)
 
-
     def __setattr__(self, name, value):
         self[name] = value
-        
 
+    def __delattr__(self, name):
+        del(self[name])
+
+    def save(self, db = None):
+        db = db or getattr(self, '_db', None)
+        if db:
+            db[self.id] = self
+        else:
+            raise Exception('Can\'t save doument - target database is undefined')
+            
 class View(object):
     """Abstract representation of a view or query."""
 
