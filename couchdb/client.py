@@ -339,7 +339,7 @@ class Database(object):
         data = self.resource.get(id)
         #print 'getitem, data', len(data), data
         #print 'aaaaaaa', data, type(data)
-        d = Document(data)
+        #d = Document(data)
         return Document(data)
 
     def __setitem__(self, id, content):
@@ -764,6 +764,16 @@ class Document(dict):
         """
         return self['_rev']
 
+    def __getattr__(self, name):
+        if name in self:
+            return self[name]
+        else:
+            raise AttributeError(u'Field %s is undefined in this document' % name)
+
+
+    def __setattr__(self, name, value):
+        self[name] = value
+        
 
 class View(object):
     """Abstract representation of a view or query."""
