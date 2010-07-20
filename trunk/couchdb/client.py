@@ -340,7 +340,8 @@ class Database(object):
         #print 'getitem, data', len(data), data
         #print 'aaaaaaa', data, type(data)
         #d = Document(data)
-        return Document(data, _db  = self)
+        return self.get(id)
+        #return Document(data, _db  = self)
 
     def __setitem__(self, id, content):
         """Create or update a document with the specified ID.
@@ -482,6 +483,9 @@ class Database(object):
                  if no document with the ID was found
         :rtype: `Document`
         """
+        if id == None:
+            raise ResourceNotFound('Document with Null id is impossible, dude')
+        
         try:
             data = self.resource.get(id, **options)
         except ResourceNotFound:
