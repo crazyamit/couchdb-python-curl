@@ -33,6 +33,8 @@ from textwrap import dedent
 import re
 import socket
 import sys
+import hashlib
+import random
 
 from cStringIO import StringIO
 from couchdb import json
@@ -325,6 +327,8 @@ class Database(object):
         """Remove the document with the specified ID from the database.
 
         :param id: the document ID
+
+        This method id broken. Use Document.delete() instead
         """
         data = self.resource.head(id)
         self.resource.delete(id, rev=resp['etag'].strip('"'))
@@ -794,7 +798,42 @@ class Document(dict):
             db[self.id] = self
         else:
             raise Exception('Can\'t save doument - target database is undefined')
+        
+    def delete(self, db = None):
+        db = db or getattr(self, '_db', None)
+        if db:
+            db.delete(self)
+        else:
+            raise Exception('Can\'t delete doument - target database is undefined')
+
+    def create(self, id, suffix_length = 12, max_retry = 100, db = None):
+        id_string = '%s%s'
+        db = db or getattr(self, '_db', None)
+        if db:
+            doc_id = id_string % (id, '')
             
+            while True:
+                
+                try:
+                    db[doc_id] = self
+                    break
+                except ResourceConflict:
+                    pass
+
+                max_retry -= 1
+                if max_retry < 0:
+                    raise Exception("Retry-limit reached during document generation")
+                
+                rand = hashlib.sha1(str(random.random())).hexdigest()[:suffix_length]
+                doc_id = id_string % (id, '_%s' % rand)
+            
+            #self['_id'] = data['_id']
+            #self['_rev'] = data['_rev']
+            
+        else:
+            raise Exception('Can\'t create doument - target database is undefined')
+        
+        
 class View(object):
     """Abstract representation of a view or query."""
 
@@ -1115,7 +1154,7 @@ class Resource(object):
         ##     curl.setopt(pycurl.CUSTOMREQUEST, method)
         ##     if method == 'HEAD':
         ##         curl.setopt(pycurl.NOBODY, True)
-
+        
         headers = headers or {}
         headers.setdefault('Accept', 'application/json')
         headers["User-Agent"] = "couchdb-python-curl %s" % __version__
