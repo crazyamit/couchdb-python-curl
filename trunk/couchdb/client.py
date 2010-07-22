@@ -833,6 +833,16 @@ class Document(dict):
         else:
             raise Exception('Can\'t create doument - target database is undefined')
         
+
+    def get_attachment(self, name):
+        return self._db.get_attachment(self, name)
+        
+    def put_attachment(self, file_object, name, content_type):
+        self._db.put_attachment(self, file_object, name, content_type)
+        
+    def delete_attachment(self, name):
+        self._db.delete_attachment(self, name)
+
         
 class View(object):
     """Abstract representation of a view or query."""
