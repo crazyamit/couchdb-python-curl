@@ -340,8 +340,8 @@ class Database(object):
         :return: a `Row` object representing the requested document
         :rtype: `Document`
         """
-        data = self.resource.get(id)
-        #print 'getitem, data', len(data), data
+        #data = self.resource.get(id)
+        #print 'getitem, id', id
         #print 'aaaaaaa', data, type(data)
         #d = Document(data)
         return self.get(id)
