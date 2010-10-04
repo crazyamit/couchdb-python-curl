@@ -344,7 +344,7 @@ class Database(object):
         #print 'getitem, id', id
         #print 'aaaaaaa', data, type(data)
         #d = Document(data)
-        return self.get(id)
+        return Document(self.resource.get(id), _db = self)
         #return Document(data, _db  = self)
 
     def __setitem__(self, id, content):
@@ -778,7 +778,7 @@ class Document(dict):
 
         :type: basestring
         """
-        return self['_rev']
+        return self.get('_rev')
 
     def __getattr__(self, name):
         if name in self:
@@ -842,7 +842,20 @@ class Document(dict):
         
     def delete_attachment(self, name):
         self._db.delete_attachment(self, name)
-
+    
+    def reload(self, db = None):
+        """Checks documents revision and reloads if necessary"""
+        db = db or getattr(self, '_db', None)
+        rev = db.resource.head(self.id)['etag']
+        
+        if rev != self.rev:
+            doc = db[self.id]
+            for key in self.keys():
+                del(self[key])
+            self.update(doc)
+            return True
+        else:
+            return False
         
 class View(object):
     """Abstract representation of a view or query."""
@@ -1131,6 +1144,7 @@ class Resource(object):
                 curl.setopt(pycurl.CUSTOMREQUEST, method)
                 if method == 'HEAD':
                     curl.setopt(pycurl.NOBODY, True)
+                    curl.setopt(pycurl.HEADER, True)
             
             try:
                 #print "Curl setopt url", uri(self.uri, path, **params), self.uri, path, params
@@ -1197,6 +1211,12 @@ class Resource(object):
             except ValueError:
                 pass
 
+        if method == 'HEAD':
+            data = dict([(key.lower(), value) for key, value in [i.split(': ', 1) for i in data.splitlines()[1:] if i]])
+            if 'etag' in data:
+                data['etag'] = json.decode(data['etag'])
+        
+        
         if status_code >= 400:
             if type(data) is dict:
                 error = (data.get('error'), data.get('reason'))
