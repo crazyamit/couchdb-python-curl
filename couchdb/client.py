@@ -688,6 +688,8 @@ class Database(object):
         docs = []
         for doc in documents:
             if isinstance(doc, dict):
+                if '_db' in doc:
+                    del(doc['_db'])
                 docs.append(doc)
             elif hasattr(doc, 'items'):
                 docs.append(dict(doc.items()))
