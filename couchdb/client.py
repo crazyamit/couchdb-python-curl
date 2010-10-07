@@ -698,7 +698,9 @@ class Database(object):
 
         content = options
         content.update(docs=docs)
-        data = self.resource.post('_bulk_docs', content=content)
+        data = self.resource.post('_bulk_docs', content=content, headers={
+            'Content-Type': 'application/json'
+        })
 
         results = []
         for idx, result in enumerate(data):
