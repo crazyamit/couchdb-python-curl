@@ -235,7 +235,7 @@ class Server(object):
         """
         data = {'source': source, 'target': target}
         data.update(options)
-        data = self.resource.post('_replicate', data)
+        data = self.resource.post('_replicate', data, headers={'Content-Type': 'application/json'})
         return data
 
 
@@ -1158,7 +1158,7 @@ class Resource(object):
                 curl.setopt(pycurl.WRITEFUNCTION, stringbuf.write)
                 curl.setopt(pycurl.FOLLOWLOCATION, 1)
                 curl.setopt(pycurl.MAXREDIRS, 5)
-                curl.setopt(pycurl.FORBID_REUSE, 0)
+                #curl.setopt(pycurl.FORBID_REUSE, 0)
                 curl.perform()
                 #print curl.getinfo(pycurl.CONTENT_TYPE)
                 stringbuf.seek(0)
