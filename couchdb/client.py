@@ -410,6 +410,19 @@ class Database(object):
         data = self.resource.post('_compact', headers={'Content-Type': 'application/json'})
         return data['ok']
 
+    def compact_view(self, name):
+        """Compact view.
+        Name must be provided without leading `_design/'
+        :return: a boolean to indicate whether the compaction was initiated
+                 successfully
+        :rtype: `bool`
+        """
+
+        assert not name.startswith('_design/')
+        
+        resource = Resource('/'.join([self.resource.uri, '_compact']))
+        return resource.post(name, headers={'Content-Type': 'application/json'})['ok']
+
     def copy(self, src, dest):
         """Copy the given document to create a new document.
 
