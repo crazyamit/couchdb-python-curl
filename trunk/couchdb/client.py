@@ -407,7 +407,7 @@ class Database(object):
                  successfully
         :rtype: `bool`
         """
-        data = self.resource.post('_compact')
+        data = self.resource.post('_compact', headers={'Content-Type': 'application/json'})
         return data['ok']
 
     def copy(self, src, dest):
@@ -749,7 +749,11 @@ class Database(object):
         return PermanentView(uri(self.resource.uri, *name.split('/')), name,
                              wrapper=wrapper)(**options)
 
-
+    
+    def view_cleanup(self):
+        return self.resource.post('_view_cleanup', headers={'Content-Type': 'application/json'})
+    
+    
 class Document(dict):
     """Representation of a document in the database.
 
@@ -1134,7 +1138,7 @@ class Resource(object):
     def _request(self, method, path=None, content=None, headers=None,
                  **params):
 
-        def _make_request(curl, path, params, retry = 1):
+        def _make_request(curl, path, params, body, retry = 1):
             
             stringbuf = StringIO()
             
@@ -1143,7 +1147,8 @@ class Resource(object):
                     curl.setopt(pycurl.POST, 1)
                 else:
                     curl.setopt(pycurl.CUSTOMREQUEST, method)
-                curl.setopt(pycurl.POSTFIELDS, body)
+                if body:
+                    curl.setopt(pycurl.POSTFIELDS, body)
             elif method in ("DELETE", "HEAD"):
                 curl.setopt(pycurl.CUSTOMREQUEST, method)
                 if method == 'HEAD':
@@ -1151,16 +1156,12 @@ class Resource(object):
                     curl.setopt(pycurl.HEADER, True)
             
             try:
-                #print "Curl setopt url", uri(self.uri, path, **params), self.uri, path, params
                 curl.setopt(pycurl.URL, uri(self.uri, path, **params).encode('utf-8'))
-                #return self.http.request(uri(self.uri, path, **params), method,
-                #                             body=body, headers=headers)
                 curl.setopt(pycurl.WRITEFUNCTION, stringbuf.write)
                 curl.setopt(pycurl.FOLLOWLOCATION, 1)
                 curl.setopt(pycurl.MAXREDIRS, 5)
                 #curl.setopt(pycurl.FORBID_REUSE, 0)
                 curl.perform()
-                #print curl.getinfo(pycurl.CONTENT_TYPE)
                 stringbuf.seek(0)
                 return stringbuf.read()
             except socket.error, e:
@@ -1204,7 +1205,7 @@ class Resource(object):
             #curl.setopt(pycurl.HTTPHEADER, ["Content-Length: %s" % str(len(body))])
 
         curl.setopt(pycurl.HTTPHEADER, ['%s: %s' % (key, headers[key]) for key in headers])
-        data = _make_request(curl, path, params)
+        data = _make_request(curl, path, params, body)
         status_code = curl.getinfo(pycurl.HTTP_CODE)
         #status_code = int(resp.status)
 
