@@ -757,7 +757,7 @@ class Database(object):
     def design_info(self, name):
         assert name.startswith('_design/')
         resource = Resource('/'.join([self.resource.uri, name, '_info']))
-        return resource.get() #, None, param1 = 'stats', param2 = '_info') #/'.join([name, '_info']))
+        return resource.get()
     
 class Document(dict):
     """Representation of a document in the database.
