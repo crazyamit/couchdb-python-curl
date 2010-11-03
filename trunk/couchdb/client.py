@@ -764,6 +764,7 @@ class Database(object):
 
     
     def view_cleanup(self):
+        """Cleanup database views (emits POST /db/_view_cleanup request)"""
         return self.resource.post('_view_cleanup', headers={'Content-Type': 'application/json'})
 
 
