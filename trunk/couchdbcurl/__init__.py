@@ -6,7 +6,7 @@
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution.
 
-from couchdb.client import *
+from couchdbcurl.client import *
 
 try:
     __version__ = __import__('pkg_resources').get_distribution('CouchDB').version

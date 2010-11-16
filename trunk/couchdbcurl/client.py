@@ -37,7 +37,7 @@ import hashlib
 import random
 
 from cStringIO import StringIO
-from couchdb import json
+from couchdbcurl import json
 
 __all__ = ['PreconditionFailed', 'ResourceNotFound', 'ResourceConflict',
            'ServerError', 'Server', 'Database', 'Document', 'ViewResults',
@@ -1189,7 +1189,7 @@ class Resource(object):
                 raise
         
 
-        from couchdb import __version__
+        from couchdbcurl import __version__
 
         curl = pycurl.Curl()
         
