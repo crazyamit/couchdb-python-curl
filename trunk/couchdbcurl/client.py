@@ -924,8 +924,10 @@ class PermanentView(View):
         if 'keys' in options:
             options = options.copy()
             keys = {'keys': options.pop('keys')}
-            data = self.resource.post(content=keys,
-                                            **self._encode_options(options))
+            data = self.resource.post(content=keys, headers={
+                'Content-Type': 'application/json'
+            },
+            **self._encode_options(options))
         else:
             data = self.resource.get(**self._encode_options(options))
         return data
