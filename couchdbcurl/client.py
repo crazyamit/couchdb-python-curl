@@ -331,7 +331,7 @@ class Database(object):
         This method id broken. Use Document.delete() instead
         """
         data = self.resource.head(id)
-        self.resource.delete(id, data=resp['etag'].strip('"'))
+        self.resource.delete(id, rev=data['etag'].strip('"'))
 
     def __getitem__(self, id):
         """Return the document with the specified ID.
@@ -340,6 +340,10 @@ class Database(object):
         :return: a `Row` object representing the requested document
         :rtype: `Document`
         """
+
+        if id == None:
+            raise ResourceNotFound('Document with Null id is impossible, dude')
+        
         #data = self.resource.get(id)
         #print 'getitem, id', id
         #print 'aaaaaaa', data, type(data)
