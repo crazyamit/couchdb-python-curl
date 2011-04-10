@@ -169,7 +169,7 @@ class Server(object):
         :raise ResourceNotFound: if no database with that name exists
         """
         db = Database(uri(self.resource.uri, name), validate_dbname(name))
-        db.resource.head() # actually make a request to the database
+        #db.resource.head() # actually make a request to the database
         return db
 
     @property
