@@ -37,7 +37,8 @@ import hashlib
 import random
 
 from cStringIO import StringIO
-from couchdbcurl import json
+#from couchdbcurl import json
+import json
 
 __all__ = ['PreconditionFailed', 'ResourceNotFound', 'ResourceConflict',
            'ServerError', 'Server', 'Database', 'Document', 'ViewResults',
@@ -906,7 +907,7 @@ class View(object):
         for name, value in options.items():
             if name in ('key', 'startkey', 'endkey') \
                     or not isinstance(value, basestring):
-                value = json.encode(value)
+                value = json.dumps(value)
             retval[name] = value
         return retval
 
@@ -964,7 +965,7 @@ class TemporaryView(View):
         if 'keys' in options:
             options = options.copy()
             body['keys'] = options.pop('keys')
-        content = json.encode(body).encode('utf-8')
+        content = json.dumps(body).encode('utf-8')
         data = self.resource.post(content=content, headers={
             'Content-Type': 'application/json'
         }, **self._encode_options(options))
@@ -1221,7 +1222,7 @@ class Resource(object):
         body = None
         if content is not None:
             if not isinstance(content, basestring):
-                body = json.encode(content).encode('utf-8')
+                body = json.dumps(content).encode('utf-8')
                 #headers.setdefault('Content-Type', 'application/json')
                 #curl.setopt(pycurl.HTTPHEADER, ["Content-Type: application/json"])
             else:
@@ -1238,14 +1239,14 @@ class Resource(object):
         #if data and resp.get('content-type') == 'application/json':
         if data and curl.getinfo(pycurl.CONTENT_TYPE) == 'application/json':
             try:
-                data = json.decode(data)
+                data = json.loads(data)
             except ValueError:
                 pass
 
         if method == 'HEAD':
             data = dict([(key.lower(), value) for key, value in [i.split(': ', 1) for i in data.splitlines()[1:] if i]])
             if 'etag' in data:
-                data['etag'] = json.decode(data['etag'])
+                data['etag'] = json.loads(data['etag'])
         
         
         if status_code >= 400:
