@@ -10,8 +10,6 @@ from couchdbcurl.client import Server
 from pprint import pprint
 from time import sleep
 
-DB_ALL = '@all@'
-
 def pinger_callback(*args, **kwargs):
     print 'callback:', args, kwargs
 
@@ -81,7 +79,6 @@ def main():
             
 
         elif len(path) == 0:
-            database = DB_ALL
             if options.verbose:
                 print "  Whole server entry"
 
@@ -112,10 +109,6 @@ def main():
         
     pool = multiprocessing.Pool()
 
-    ## while entries:
-    ##     if len(pool) < options.threads:
-    ##         process = 
-    
     result = pool.map_async(pinger, entries, callback=pinger_callback)
     
     if options.verbose:
