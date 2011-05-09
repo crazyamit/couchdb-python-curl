@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 
 import sys
-import os
-import logging
 import multiprocessing
 from urlparse import urlparse
 from optparse import OptionParser
 from couchdbcurl.client import Server
-from pprint import pprint
-from time import sleep
 
-def pinger_callback(*args, **kwargs):
-    #print 'callback:', args, kwargs
-    pass
 
 
 def pinger(entry):
+    """Worker process.
+    Will connect to entry['server'] and call entry['design_doc']/entry['view_name'] in database entry['database']
+    """
+    
     #print 'pinger started with entry:', entry
     try:
         db = Server(entry['server'])[entry['database']]
@@ -27,7 +24,9 @@ def pinger(entry):
     
 
 def main():
-    
+    """
+    Entry point.
+    """
     parser = OptionParser()
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Be verbose")
     parser.add_option("-p", "--threads", dest="threads", action="store", type="int", default=multiprocessing.cpu_count(), help="Threads count")
@@ -110,7 +109,7 @@ def main():
         
     pool = multiprocessing.Pool()
 
-    result = pool.map_async(pinger, entries, callback=pinger_callback)
+    result = pool.map_async(pinger, entries)
     
     if options.verbose:
         print 'Waiting %d seconds for all jobs done' % options.timeout
