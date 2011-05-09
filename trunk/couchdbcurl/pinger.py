@@ -11,11 +11,12 @@ from pprint import pprint
 from time import sleep
 
 def pinger_callback(*args, **kwargs):
-    print 'callback:', args, kwargs
+    #print 'callback:', args, kwargs
+    pass
 
 
 def pinger(entry):
-    print 'pinger started with entry:', entry
+    #print 'pinger started with entry:', entry
     try:
         db = Server(entry['server'])[entry['database']]
         db.view('%s/%s' % (entry['design_doc'], entry['view_name']), limit=0).rows
@@ -45,7 +46,7 @@ def main():
         server = '%s://%s' % (u.scheme, u.netloc)
         _server = Server(server)
         path = [s for s in u.path.lstrip('/').split('/') if s]
-        print path
+        
         
         design_doc = None
 
@@ -118,11 +119,9 @@ def main():
     result.wait(options.timeout)
     
     if not result.ready():
-        if options.verbose:
-            print "Terminating pool"
+        print "Timeout reached, terminating workers"
         pool.terminate()
-        if options.verbose:
-            print "Terminated"
+        print "Terminated"
         sys.exit(42)
     else:
         if result.successful():

@@ -2,7 +2,7 @@
 
 from setuptools import setup
 setup(name='couchdb-python-curl',
-      version='1.0.7',
+      version='1.0.7p1',
       description='CouchDB-python wrapper (using cURL library)',
       author='Alexey Loshkarev',
       author_email='elf2001@gmail.com',
