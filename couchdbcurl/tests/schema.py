@@ -31,15 +31,6 @@ class DocumentTestCase(unittest.TestCase):
         except client.ResourceNotFound:
             pass
 
-    def test_mutable_fields(self):
-        class Test(schema.Document):
-            d = schema.DictField()
-        a = Test()
-        b = Test()
-        a.d['x'] = True
-        self.assertTrue(a.d.get('x'))
-        self.assertFalse(b.d.get('x'))
-
     def test_automatic_id(self):
         class Post(schema.Document):
             title = schema.TextField()
@@ -147,7 +138,6 @@ class ListFieldTestCase(unittest.TestCase):
             numbers = schema.ListField(schema.DecimalField)
         thing = Thing(numbers=[Decimal('1.0'), Decimal('2.0')])
         self.assertEqual(1, thing.numbers.count(Decimal('1.0')))
-        self.assertEqual(0, thing.numbers.count('1.0'))
 
     def test_proxy_index(self):
         class Thing(schema.Document):
@@ -190,30 +180,6 @@ class ListFieldTestCase(unittest.TestCase):
         self.db['test'] = {'comments': [{'author': 'Joe', 'content': 'Hey'}]}
         post = Post.load(self.db, 'test')
         assert isinstance(post.comments[0], dict)
-
-    def test_proxy_pop(self):
-        class Thing(schema.Document):
-            numbers = schema.ListField(schema.DecimalField)
-        thing = Thing()
-        thing.numbers = [Decimal('%d' % i) for i in range(3)]
-        self.assertEqual(thing.numbers.pop(), Decimal('2.0'))
-        self.assertEqual(len(thing.numbers), 2)
-        self.assertEqual(thing.numbers.pop(0), Decimal('0.0'))
-
-    def test_proxy_slices(self):
-        class Thing(schema.Document):
-            numbers = schema.ListField(schema.DecimalField)
-        thing = Thing()
-        thing.numbers = [Decimal('%d' % i) for i in range(5)]
-        ll = thing.numbers[1:3]
-        self.assertEqual(len(ll), 2)
-        self.assertEqual(ll[0], Decimal('1.0'))
-        thing.numbers[2:4] = [Decimal('%d' % i) for i in range(6, 8)]
-        self.assertEqual(thing.numbers[2], Decimal('6.0'))
-        self.assertEqual(thing.numbers[4], Decimal('4.0'))
-        self.assertEqual(len(thing.numbers), 5)
-        del thing.numbers[3:]
-        self.assertEquals(len(thing.numbers), 3)
 
 
 def suite():
