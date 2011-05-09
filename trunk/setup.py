@@ -2,7 +2,7 @@
 
 from setuptools import setup
 setup(name='couchdb-python-curl',
-      version='1.0.6',
+      version='1.0.7',
       description='CouchDB-python wrapper (using cURL library)',
       author='Alexey Loshkarev',
       author_email='elf2001@gmail.com',
@@ -21,7 +21,7 @@ setup(name='couchdb-python-curl',
       install_requires=['pycurl'],
       entry_points={
           'console_scripts': [
-              
+            'couchdb-curl-pinger = couchdbcurl.pinger:main',
           ]
       }
       )
