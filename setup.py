@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-version = '1.0.9'
+version = '1.0.10'
 from setuptools import setup
 if __name__ == '__main__':
     setup(name='couchdb-python-curl',
@@ -22,7 +22,11 @@ if __name__ == '__main__':
           install_requires=['pycurl'],
           entry_points={
               'console_scripts': [
-                'couchdb-curl-pinger = couchdbcurl.pinger:main',
+                  'couchdb-curl-pinger = couchdbcurl.pinger:main',
+                  'couchdb-curl-viewserver = couchdb.view:main',
+                  'couchdb-curl-dump = couchdb.tools.dump:main',
+                  'couchdb-curl-load = couchdb.tools.load:main',
+                  'couchdb-curl-replicate = couchdb.tools.replication_helper:main'
               ]
           }
           )
