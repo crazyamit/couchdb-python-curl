@@ -25,16 +25,10 @@ class ServerTestCase(unittest.TestCase):
             self.server.delete('python-tests')
         except client.ResourceNotFound:
             pass
-        try:
-            self.server.delete('python-tests-a')
-        except client.ResourceNotFound:
-            pass
 
     def test_server_vars(self):
         version = self.server.version
         config = self.server.config
-        stats = self.server.stats()
-        tasks = self.server.tasks()
 
     def test_get_db_missing(self):
         self.assertRaises(client.ResourceNotFound,
@@ -55,29 +49,6 @@ class ServerTestCase(unittest.TestCase):
         self.assertRaises(client.ResourceNotFound, self.server.delete,
                           'python-tests')
 
-    def test_replicate(self):
-        a = self.server.create('python-tests')
-        id = a.create({'test': 'a'})
-        b = self.server.create('python-tests-a')
-        result = self.server.replicate('python-tests', 'python-tests-a')
-        self.assertEquals(result['ok'], True)
-        self.assertEquals(b[id]['test'], 'a')
-
-        doc = b[id]
-        doc['test'] = 'b'
-        b.update([doc])
-        self.server.replicate(client.DEFAULT_BASE_URI + 'python-tests-a',
-                              'python-tests')
-        self.assertEquals(b[id]['test'], 'b')
-
-    def test_replicate_continuous(self):
-        a = self.server.create('python-tests')
-        b = self.server.create('python-tests-a')
-        result = self.server.replicate('python-tests', 'python-tests-a', continuous=True)
-        self.assertEquals(result['ok'], True)
-        version = tuple(int(i) for i in self.server.version.split('.')[:2])
-        if version >= (0, 10):
-            self.assertTrue('_local_id' in result)
 
 class DatabaseTestCase(unittest.TestCase):
 
@@ -133,21 +104,10 @@ class DatabaseTestCase(unittest.TestCase):
         old_doc = self.db.get('foo', rev=old_rev)
         self.assertEqual(old_rev, old_doc['_rev'])
 
-        revs = [i for i in self.db.revisions('foo')]
-        self.assertEqual(revs[0]['_rev'], new_rev)
-        self.assertEqual(revs[1]['_rev'], old_rev)
-
         self.assertTrue(self.db.compact())
         while self.db.info()['compact_running']:
             pass
-
-        # 0.10 responds with 404, 0.9 responds with 500, same content
-        doc = 'fail'
-        try:
-            doc = self.db.get('foo', rev=old_rev)
-        except client.ServerError:
-            doc = None
-        assert doc is None
+        self.assertRaises(client.ServerError, self.db.get, 'foo', rev=old_rev)
 
     def test_attachment_crud(self):
         doc = {'bar': 42}
@@ -286,7 +246,6 @@ class DatabaseTestCase(unittest.TestCase):
 
         # update the first doc to provoke a conflict in the next bulk update
         doc = docs[0].copy()
-        doc['name'] = 'Jane Doe'
         self.db[doc['_id']] = doc
 
         results = self.db.update(docs, all_or_nothing=True)

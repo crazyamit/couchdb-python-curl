@@ -567,8 +567,7 @@ class DictField(Field):
     >>> del server['python-tests']
     """
     def __init__(self, schema=None, name=None, default=None):
-        default = default or {}
-        Field.__init__(self, name=name, default=lambda: default.copy())
+        Field.__init__(self, name=name, default=default or {})
         self.schema = schema
 
     def _to_python(self, value):
@@ -679,15 +678,6 @@ class ListField(Field):
         def __setitem__(self, index, value):
             self.list[index] = self.field._to_json(value)
 
-        def __delslice__(self, i, j):
-            del self.list[i:j]
-
-        def __getslice__(self, i, j):
-            return ListField.Proxy(self.list[i:j], self.field)
-
-        def __setslice__(self, i, j, seq):
-            self.list[i:j] = (self.field._to_json(v) for v in seq)
-
         def __contains__(self, value):
             for item in self.list:
                 if self.field._to_python(item) == value:
@@ -715,7 +705,7 @@ class ListField(Field):
             self.list.append(self.field._to_json(value))
 
         def count(self, value):
-            return [i for i in self].count(value)
+            return self.list.count(self.field._to_json(value))
 
         def extend(self, list):
             for item in list:

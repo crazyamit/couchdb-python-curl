@@ -32,18 +32,12 @@ def run(input=sys.stdin, output=sys.stdout):
     """
     functions = []
 
-    def _writejson(obj):
-        obj = json.encode(obj)
-        if isinstance(obj, unicode):
-            obj = obj.encode('utf-8')
-        output.write(obj)
-        output.write('\n')
-        output.flush()
-
     def _log(message):
         if not isinstance(message, basestring):
             message = json.encode(message)
-        _writejson({'log': message})
+        output.write(json.encode({'log': message}))
+        output.write('\n')
+        output.flush()
 
     def reset(config=None):
         del functions[:]
@@ -141,7 +135,9 @@ def run(input=sys.stdin, output=sys.stdout):
             else:
                 retval = handlers[cmd[0]](*cmd[1:])
                 log.debug('Returning  %r', retval)
-                _writejson(retval)
+                output.write(json.encode(retval))
+                output.write('\n')
+                output.flush()
     except KeyboardInterrupt:
         return 0
     except Exception, e:
