@@ -781,8 +781,20 @@ class Database(object):
 class Document(dict):
     """Representation of a document in the database.
 
-    This is basically just a dictionary with the two additional properties
-    `id` and `rev`, which contain the document ID and revision, respectively.
+    This is basically just a dictionary with some helper functions and properties (see below).
+    You may work with this object in dict-style or attribute-style
+    
+    >>> from couchdbcurl.client import Document
+    >>> doc = Document()
+    >>> doc['some_field'] = 'this is value'
+    >>> doc.other_field = 'another value'
+    >>> dict(doc)
+    {'other_field': 'another value', 'some_field': 'this is value'}
+    >>> doc.some_field
+    'this is value'
+    >>> doc['other_field']
+    'another value'
+
     """
 
     def __init__(self, *args, **kwargs):
@@ -825,6 +837,8 @@ class Document(dict):
         del(self[name])
 
     def save(self, db = None):
+        """Save document. Document will be saved to database ``db`` or ``document._db``"""
+        
         db = db or getattr(self, '_db', None)
         if db:
             db[self.id] = self
@@ -832,6 +846,7 @@ class Document(dict):
             raise Exception('Can\'t save doument - target database is undefined')
         
     def delete(self, db = None):
+        """Delete document"""
         db = db or getattr(self, '_db', None)
         if db:
             db.delete(self)
@@ -839,6 +854,14 @@ class Document(dict):
             raise Exception('Can\'t delete doument - target database is undefined')
 
     def create(self, id, suffix_length = 12, max_retry = 100, db = None):
+        """Conflict-safe document creator.
+        Document id will be '<id>' or '<id><random suffix>' if '<id>' already exists.
+        
+        id - id prefix.
+        suffix_length - suffix length
+        max_retry - upper retry limit
+        db - database to create document in
+        """
         id_string = '%s%s'
         db = db or getattr(self, '_db', None)
         if db:
@@ -867,12 +890,15 @@ class Document(dict):
         
 
     def get_attachment(self, name):
+        """Shortcut to Database.get_attachment()"""
         return self._db.get_attachment(self, name)
         
     def put_attachment(self, file_object, name, content_type = None):
+        """Shortcut to Database.put_attachment()"""
         return self._db.put_attachment(self, file_object, name, content_type)
         
     def delete_attachment(self, name):
+        """Shortcut to Database.delete_attachment()"""
         self._db.delete_attachment(self, name)
     
     def reload(self, db = None):

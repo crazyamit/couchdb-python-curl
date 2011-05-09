@@ -29,8 +29,8 @@ def main():
     """
     parser = OptionParser(usage=u"usage: %prog [options] url1 ... urlN")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Be verbose")
-    parser.add_option("-p", "--threads", dest="threads", action="store", type="int", default=multiprocessing.cpu_count(), help="Threads count")
-    parser.add_option("-t", "--timeout", dest="timeout", action="store", type="int", default=10, help="Threads count")
+    parser.add_option("-p", "--threads", dest="threads", action="store", type="int", default=multiprocessing.cpu_count(), help="Threads count. Defaults to CPU count")
+    parser.add_option("-t", "--timeout", dest="timeout", action="store", type="int", default=10, help="Script execution timeout")
     
     (options, args) = parser.parse_args()
     
