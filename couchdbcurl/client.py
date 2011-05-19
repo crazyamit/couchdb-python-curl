@@ -795,6 +795,17 @@ class Document(dict):
     >>> doc['other_field']
     'another value'
 
+    You may check wether Document is new or existing simply by bool(doc). So, you may use constructions like:
+    
+    if doc:
+        doc.save()
+    else:
+        doc.create('some_id_prefix')
+    
+    >>> print Document() or 'New'
+    New
+    
+    
     """
 
     def __init__(self, *args, **kwargs):
@@ -802,12 +813,15 @@ class Document(dict):
             self._db = kwargs['_db']
             del(kwargs['_db'])
         dict.__init__(self, *args, **kwargs)
-
+    
     def __repr__(self):
-        return '<%s %r@%r %r>' % (type(self).__name__, self.id, self.rev,
+        return '<%s %s@%s %r>' % (type(self).__name__, self.get('_id', '-'), self.get('_rev', '-'),
                                   dict([(k,v) for k,v in self.items()
                                         if k not in ('_id', '_rev')]))
-
+    
+    def __nonzero__(self):
+        return '_id' in self and bool(self.id)
+        
     @property
     def id(self):
         """The document ID.
@@ -843,7 +857,7 @@ class Document(dict):
         if db:
             db[self.id] = self
         else:
-            raise Exception('Can\'t save doument - target database is undefined')
+            raise Exception('Can\'t save document - target database is undefined')
         
     def delete(self, db = None):
         """Delete document"""
@@ -851,7 +865,7 @@ class Document(dict):
         if db:
             db.delete(self)
         else:
-            raise Exception('Can\'t delete doument - target database is undefined')
+            raise Exception('Can\'t delete document - target database is undefined')
 
     def create(self, id, suffix_length = 12, max_retry = 100, db = None):
         """Conflict-safe document creator.
@@ -886,7 +900,7 @@ class Document(dict):
             #self['_rev'] = data['_rev']
             
         else:
-            raise Exception('Can\'t create doument - target database is undefined')
+            raise Exception('Can\'t create document - target database is undefined')
         
 
     def get_attachment(self, name):
