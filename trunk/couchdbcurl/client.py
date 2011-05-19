@@ -795,16 +795,12 @@ class Document(dict):
     >>> doc['other_field']
     'another value'
 
-    You may check wether Document is new or existing simply by bool(doc). So, you may use constructions like:
+    You may check wether Document is new or existing simply by testing it id property. So, you may use constructions like::
     
-    if doc:
-        doc.save()
-    else:
-        doc.create('some_id_prefix')
-    
-    >>> print Document() or 'New'
-    New
-    
+      if doc.id:
+          doc.save()
+      else:
+          doc.create('some_id_prefix')
     
     """
 
@@ -819,16 +815,16 @@ class Document(dict):
                                   dict([(k,v) for k,v in self.items()
                                         if k not in ('_id', '_rev')]))
     
-    def __nonzero__(self):
-        return '_id' in self and bool(self.id)
+    ## def __nonzero__(self):
+    ##     return '_id' in self and bool(self.id)
         
     @property
     def id(self):
         """The document ID.
 
-        :type: basestring
+        :type: basestring or None for new documents
         """
-        return self['_id']
+        return self.get('_id')
 
     @property
     def rev(self):
