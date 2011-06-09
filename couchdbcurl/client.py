@@ -331,6 +331,8 @@ class Database(object):
 
         This method id broken. Use Document.delete() instead
         """
+        if not id:
+            raise ResourceNotFound("Document can't be empty, dude")
         data = self.resource.head(id)
         self.resource.delete(id, rev=data['etag'].strip('"'))
 
@@ -342,8 +344,8 @@ class Database(object):
         :rtype: `Document`
         """
 
-        if id == None:
-            raise ResourceNotFound('Document with Null id is impossible, dude')
+        if not id:
+            raise ResourceNotFound("Document can't be empty, dude")
         
         #data = self.resource.get(id)
         #print 'getitem, id', id
@@ -360,6 +362,8 @@ class Database(object):
                         new documents, or a `Row` object for existing
                         documents
         """
+        if not id:
+            raise ResourceNotFound("Document can't be empty, dude")
         if '_db' in content:
             del(content['_db'])
         data = self.resource.put(id, content=content)
