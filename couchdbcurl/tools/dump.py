@@ -17,10 +17,10 @@ from email.MIMEMultipart import MIMEMultipart
 from optparse import OptionParser
 import sys
 
-from couchdb import __version__ as VERSION
-from couchdb import json
-from couchdb.client import Database
-from couchdb.multipart import write_multipart
+from couchdbcurl import __version__ as VERSION
+import json
+from couchdbcurl.client import Database
+from couchdbcurl.multipart import write_multipart
 
 
 def dump_db(dburl, username=None, password=None, boundary=None,
@@ -35,7 +35,8 @@ def dump_db(dburl, username=None, password=None, boundary=None,
         doc = db.get(docid, attachments=True)
         print>>sys.stderr, 'Dumping document %r' % doc.id
         attachments = doc.pop('_attachments', {})
-        jsondoc = json.encode(doc)
+        del(doc._db)
+        jsondoc = json.dumps(doc)
 
         if attachments:
             parts = envelope.open({

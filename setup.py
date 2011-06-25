@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-version = '1.0.14'
-from setuptools import setup
+version = '1.0.14p2'
+from setuptools import setup, find_packages
 if __name__ == '__main__':
     setup(name='couchdb-python-curl',
           version=version,
@@ -8,7 +8,7 @@ if __name__ == '__main__':
           author='Alexey Loshkarev',
           author_email='elf2001@gmail.com',
           url='http://code.google.com/p/couchdb-python-curl/',
-          packages=['couchdbcurl'],
+          packages=find_packages(),
           license='GPL',
           classifiers=[
               "Development Status :: 5 - Production/Stable", 
