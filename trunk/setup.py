@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-version = '1.0.13'
+version = '1.0.14'
 from setuptools import setup
 if __name__ == '__main__':
     setup(name='couchdb-python-curl',
@@ -23,10 +23,10 @@ if __name__ == '__main__':
           entry_points={
               'console_scripts': [
                   'couchdb-curl-pinger = couchdbcurl.pinger:main',
-                  'couchdb-curl-viewserver = couchdb.view:main',
-                  'couchdb-curl-dump = couchdb.tools.dump:main',
-                  'couchdb-curl-load = couchdb.tools.load:main',
-                  'couchdb-curl-replicate = couchdb.tools.replication_helper:main'
+                  'couchdb-curl-viewserver = couchdbcurl.view:main',
+                  'couchdb-curl-dump = couchdbcurl.tools.dump:main',
+                  'couchdb-curl-load = couchdbcurl.tools.load:main',
+                  'couchdb-curl-replicate = couchdbcurl.tools.replication_helper:main'
               ]
           }
           )
