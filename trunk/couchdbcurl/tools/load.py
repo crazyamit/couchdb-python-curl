@@ -16,10 +16,10 @@ from email import message_from_file
 from optparse import OptionParser
 import sys
 
-from couchdb import __version__ as VERSION
-from couchdb import json
-from couchdb.client import Database
-from couchdb.multipart import read_multipart
+from couchdbcurl import __version__ as VERSION
+import json
+from couchdbcurl.client import Database
+from couchdbcurl.multipart import read_multipart
 
 
 def load_db(fileobj, dburl, username=None, password=None, ignore_errors=False):
@@ -33,7 +33,7 @@ def load_db(fileobj, dburl, username=None, password=None, ignore_errors=False):
         if is_multipart: # doc has attachments
             for headers, _, payload in payload:
                 if 'content-id' not in headers:
-                    doc = json.decode(payload)
+                    doc = json.loads(payload)
                     doc['_attachments'] = {}
                 else:
                     doc['_attachments'][headers['content-id']] = {
@@ -43,7 +43,7 @@ def load_db(fileobj, dburl, username=None, password=None, ignore_errors=False):
                     }
 
         else: # no attachments, just the JSON
-            doc = json.decode(payload)
+            doc = json.loads(payload)
 
         del doc['_rev']
         print>>sys.stderr, 'Loading document %r' % docid
