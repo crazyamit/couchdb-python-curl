@@ -666,8 +666,7 @@ class Database(object):
         :rtype: `ViewResults`
         """
         return TemporaryView(uri(self.resource.uri, '_temp_view'), map_fun,
-                             reduce_fun, language=language, wrapper=wrapper,
-                             curl=self.resource.curl)(**options)
+                             reduce_fun, language=language, wrapper=wrapper)(**options)
 
     def update(self, documents, **options):
         """Perform a bulk update or insertion of the given documents using a
@@ -982,8 +981,8 @@ class TemporaryView(View):
     """Representation of a temporary view."""
 
     def __init__(self, uri, map_fun, reduce_fun=None,
-                 language='javascript', wrapper=None, curl=None):
-        View.__init__(self, uri, wrapper=wrapper, curl=curl)
+                 language='javascript', wrapper=None):
+        View.__init__(self, uri, wrapper=wrapper)
         if isinstance(map_fun, FunctionType):
             map_fun = getsource(map_fun).rstrip('\n\r')
         self.map_fun = dedent(map_fun.lstrip('\n\r'))
@@ -1203,7 +1202,6 @@ class Resource(object):
 
     def _request(self, method, path=None, content=None, headers=None,
                  **params):
-
         def _make_request(curl, path, params, body, retry = 1):
             
             stringbuf = StringIO()
@@ -1237,7 +1235,6 @@ class Resource(object):
         
 
         from couchdbcurl import __version__
-
         curl = pycurl.Curl()
         
         ## if method in ("PUT", "POST"):
