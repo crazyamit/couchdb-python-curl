@@ -880,7 +880,7 @@ class Document(dict):
         if db:
             rand = ''
             if force_random_suffix:
-                rand = hashlib.sha1(str(random.random())).hexdigest()[:suffix_length]
+                rand = '_' + hashlib.sha1(str(random.random())).hexdigest()[:suffix_length]
                 
             doc_id = id_string % (id, rand)
             
