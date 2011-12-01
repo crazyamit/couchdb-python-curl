@@ -866,7 +866,7 @@ class Document(dict):
         else:
             raise Exception('Can\'t delete document - target database is undefined')
 
-    def create(self, id, suffix_length = 12, max_retry = 100, db = None):
+    def create(self, id, suffix_length = 12, max_retry = 100, db = None, force_random_suffix=False):
         """Conflict-safe document creator.
         Document id will be '<id>' or '<id><random suffix>' if '<id>' already exists.
         
@@ -878,7 +878,11 @@ class Document(dict):
         id_string = '%s%s'
         db = db or getattr(self, '_db', None)
         if db:
-            doc_id = id_string % (id, '')
+            rand = ''
+            if force_random_suffix:
+                rand = hashlib.sha1(str(random.random())).hexdigest()[:suffix_length]
+                
+            doc_id = id_string % (id, rand)
             
             while True:
                 
@@ -894,9 +898,6 @@ class Document(dict):
                 
                 rand = hashlib.sha1(str(random.random())).hexdigest()[:suffix_length]
                 doc_id = id_string % (id, '_%s' % rand)
-            
-            #self['_id'] = data['_id']
-            #self['_rev'] = data['_rev']
             
         else:
             raise Exception('Can\'t create document - target database is undefined')
