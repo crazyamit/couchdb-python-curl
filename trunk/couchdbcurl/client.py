@@ -404,7 +404,7 @@ class Database(object):
         :return: the ID of the created document
         :rtype: `unicode`
         """
-        data = self.resource.post(content=data)
+        data = self.resource.post(content=data, headers={'Content-Type': 'application/json'})
         return data['id']
 
     def compact(self):
