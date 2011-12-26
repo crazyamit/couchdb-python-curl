@@ -622,7 +622,7 @@ class Database(object):
 
         data = self.resource(doc['_id']).put(filename, content=content,
                                                    headers={
-            'Content-Type': content_type
+            'Content-Type': str(content_type)
         }, rev=doc['_rev'])
         doc['_rev'] = data['rev']
 
