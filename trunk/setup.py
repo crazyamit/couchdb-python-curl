@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-version = '1.0.18p1'
+version = '1.0.19'
 from setuptools import setup, find_packages
 if __name__ == '__main__':
     setup(name='couchdb-python-curl',
@@ -23,6 +23,7 @@ if __name__ == '__main__':
           entry_points={
               'console_scripts': [
                   'couchdb-curl-pinger = couchdbcurl.pinger:main',
+                  'couchdb-curl-dbcompact = couchdbcurl.dbcompact:main',
                   'couchdb-curl-viewserver = couchdbcurl.view:main',
                   'couchdb-curl-dump = couchdbcurl.tools.dump:main',
                   'couchdb-curl-load = couchdbcurl.tools.load:main',
