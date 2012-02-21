@@ -40,8 +40,8 @@ import re
 import sys
 import time
 
-from couchdb import __version__ as VERSION
-from couchdb import json
+from couchdbcurl import __version__ as VERSION
+import json
 
 log = logging.getLogger('couchdb.tools.replication_helper')
 
