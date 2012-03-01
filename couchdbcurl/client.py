@@ -35,6 +35,7 @@ import socket
 import sys
 import hashlib
 import random
+from urlparse import urlparse
 
 from cStringIO import StringIO
 #from couchdbcurl import json
@@ -1222,6 +1223,9 @@ class Resource(object):
             
             try:
                 curl.setopt(pycurl.URL, uri(self.uri, path, **params).encode('utf-8'))
+                params = urlparse(self.uri)
+                if params.username and params.password:
+                    curl.setopt(pycurl.USERPWD, "%s:%s" % (params.username, params.password))
                 curl.setopt(pycurl.WRITEFUNCTION, stringbuf.write)
                 curl.setopt(pycurl.FOLLOWLOCATION, 1)
                 curl.setopt(pycurl.MAXREDIRS, 5)
