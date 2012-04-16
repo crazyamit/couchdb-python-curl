@@ -1091,7 +1091,7 @@ class ViewResults(object):
 
     def _fetch(self):
         data = self.view._exec(self.options)
-        self._rows = [Row(row) for row in data['rows']]
+        self._rows = [Row(row) for row in data['rows'] if not row['error']]
         self._total_rows = data.get('total_rows')
         self._offset = data.get('offset', 0)
 
