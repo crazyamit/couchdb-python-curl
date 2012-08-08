@@ -29,8 +29,8 @@ def main():
     """
     parser = OptionParser(usage=u"usage: %prog [options] url1 ... urlN")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Be verbose")
-    parser.add_option("-p", "--threads", dest="threads", action="store", type="int", default=multiprocessing.cpu_count(), help="Threads count. Defaults to CPU count")
-    parser.add_option("-t", "--timeout", dest="timeout", action="store", type="int", default=10, help="Script execution timeout")
+    parser.add_option("-p", "--threads", dest="threads", action="store", type="int", default=2, help="Threads count. Default: %default")
+    parser.add_option("-t", "--timeout", dest="timeout", action="store", type="int", default=10, help="Script execution timeout. Default: %default")
     
     (options, args) = parser.parse_args()
     
@@ -109,9 +109,9 @@ def main():
 
     if options.verbose:
         print 'Initiating pool of %d workers' % (options.threads)
-        
-    pool = multiprocessing.Pool()
-
+    
+    pool = multiprocessing.Pool(options.threads)
+    
     result = pool.map_async(pinger, entries)
     
     if options.verbose:
