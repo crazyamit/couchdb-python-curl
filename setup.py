@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-version = '1.0.23'
+version = '1.0.24'
 from setuptools import setup, find_packages
 if __name__ == '__main__':
     setup(name='couchdb-python-curl',
@@ -19,7 +19,7 @@ if __name__ == '__main__':
               "Topic :: Software Development :: Libraries :: Python Modules",
               "Topic :: Database :: Front-Ends",
               ],
-          install_requires=['pycurl'],
+#          install_requires=['pycurl'],
           entry_points={
               'console_scripts': [
                   'couchdb-curl-pinger = couchdbcurl.pinger:main',
