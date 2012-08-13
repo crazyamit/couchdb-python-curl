@@ -368,8 +368,11 @@ class Database(object):
         if '_db' in content:
             del(content['_db'])
         data = self.resource.put(id, content=content)
-        content.update({'_id': data['id'], '_rev': data['rev'], '_db': self})
+        # handle _security (and may be more) documents, without _id/_rev fields
 
+        if 'id' in data:
+            content.update({'_id': data['id'], '_rev': data['rev'], '_db': self})
+        
     @property
     def name(self):
         """The name of the database.
