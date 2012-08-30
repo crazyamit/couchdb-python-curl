@@ -112,9 +112,6 @@ class Server(object):
         :param timeout: socket timeout in number of seconds, or `None` for no
                         timeout
         """
-        #http = httplib2.Http(cache=cache, timeout=timeout)
-        #http.force_exception_to_status_code = False
-        #curl = pycurl.Curl()
         self.resource = Resource(uri)
 
     def __contains__(self, name):
@@ -132,13 +129,11 @@ class Server(object):
 
     def __iter__(self):
         """Iterate over the names of all databases."""
-        #resp, data = self.resource.get('_all_dbs')
         data = self.resource.get('_all_dbs')
         return iter(data)
 
     def __len__(self):
         """Return the number of databases."""
-        #resp, data = self.resource.get('_all_dbs')
         data = self.resource.get('_all_dbs')
         return len(data)
 
@@ -171,7 +166,6 @@ class Server(object):
         :raise ResourceNotFound: if no database with that name exists
         """
         db = Database(uri(self.resource.uri, name), validate_dbname(name))
-        #db.resource.head() # actually make a request to the database
         return db
 
     @property
@@ -348,12 +342,7 @@ class Database(object):
         if not id:
             raise ResourceNotFound("Document can't be empty, dude")
         
-        #data = self.resource.get(id)
-        #print 'getitem, id', id
-        #print 'aaaaaaa', data, type(data)
-        #d = Document(data)
         return Document(self.resource.get(id), _db = self)
-        #return Document(data, _db  = self)
 
     def __setitem__(self, id, content):
         """Create or update a document with the specified ID.
@@ -368,7 +357,6 @@ class Database(object):
         if '_db' in content:
             del(content['_db'])
         data = self.resource.put(id, content=content)
-        # handle _security (and may be more) documents, without _id/_rev fields
 
         if 'id' in data:
             content.update({'_id': data['id'], '_rev': data['rev'], '_db': self})
@@ -1177,11 +1165,9 @@ class Row(dict):
 class Resource(object):
 
     def __init__(self, uri):
-        #self.curl = pycurl.Curl()
         self.uri = uri
 
     def __del__(self):
-        #self.curl.close()
         pass
 
     # temporary commented out. Is there anyone uses it?
@@ -1245,43 +1231,24 @@ class Resource(object):
         from couchdbcurl import __version__
         curl = pycurl.Curl()
         
-        ## if method in ("PUT", "POST"):
-        ##     if method == "POST":
-        ##         self.curl.setopt(pycurl.POST, 1)
-        ##     else:
-        ##         curl.setopt(pycurl.CUSTOMREQUEST, method)
-        ##         curl.setopt(pycurl.POSTFIELDS, body)
-        ## elif method in ("DELETE", "HEAD"):
-        ##     curl.setopt(pycurl.CUSTOMREQUEST, method)
-        ##     if method == 'HEAD':
-        ##         curl.setopt(pycurl.NOBODY, True)
-        
         headers = headers or {}
         headers.setdefault('Accept', 'application/json')
         headers["User-Agent"] = "couchdb-python-curl %s" % __version__
   
        
-        #curl.setopt(pycurl.HTTPHEADER, headers)
-        #headers.setdefault('User-Agent', 'couchdb-python %s' % __version__)
-        #curl.setopt(pycurl.HTTPHEADER, [])
         body = None
         if content is not None:
             if not isinstance(content, basestring):
                 body = json.dumps(content).encode('utf-8')
-                #headers.setdefault('Content-Type', 'application/json')
-                #curl.setopt(pycurl.HTTPHEADER, ["Content-Type: application/json"])
             else:
                 body = content
             headers.setdefault('Content-Length', str(len(body)))
-            #curl.setopt(pycurl.HTTPHEADER, ["Content-Length: %s" % str(len(body))])
 
         curl.setopt(pycurl.HTTPHEADER, ['%s: %s' % (key, headers[key]) for key in headers])
         data = _make_request(curl, path, params, body)
         status_code = curl.getinfo(pycurl.HTTP_CODE)
-        #status_code = int(resp.status)
 
         
-        #if data and resp.get('content-type') == 'application/json':
         if data and curl.getinfo(pycurl.CONTENT_TYPE) == 'application/json':
             try:
                 data = json.loads(data)
@@ -1308,7 +1275,6 @@ class Resource(object):
             else:
                 raise ServerError((status_code, error))
 
-        #return resp, data
         curl.close()
         
         return data
