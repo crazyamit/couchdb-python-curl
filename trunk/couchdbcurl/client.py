@@ -327,7 +327,7 @@ class Database(object):
         This method id broken. Use Document.delete() instead
         """
         if not id:
-            raise ResourceNotFound("Document can't be empty, dude")
+            raise ResourceNotFound("Can't delete document with empty id")
         data = self.resource.head(id)
         self.resource.delete(id, rev=data['etag'].strip('"'))
 
@@ -340,7 +340,7 @@ class Database(object):
         """
 
         if not id:
-            raise ResourceNotFound("Document can't be empty, dude")
+            raise ResourceNotFound("Can't get document with empty id")
         
         return Document(self.resource.get(id), _db = self)
 
@@ -353,7 +353,7 @@ class Database(object):
                         documents
         """
         if not id:
-            raise ResourceNotFound("Document can't be empty, dude")
+            raise ResourceNotFound("Can't save document with empty id")
         if '_db' in content:
             del(content['_db'])
         data = self.resource.put(id, content=content)
@@ -1193,7 +1193,7 @@ class Resource(object):
 
     def _request(self, method, path=None, content=None, headers=None,
                  **params):
-        def _make_request(curl, path, params, body, retry = 1):
+        def _make_request(curl, path, params, body, retry=1):
             
             stringbuf = StringIO()
             
