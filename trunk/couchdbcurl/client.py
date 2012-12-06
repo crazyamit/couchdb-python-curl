@@ -1053,6 +1053,7 @@ class ViewResults(object):
         self.view = view
         self.options = options
         self._rows = self._total_rows = self._offset = None
+        self._update_seq = None
 
     def __repr__(self):
         return '<%s %r %r>' % (type(self).__name__, self.view, self.options)
@@ -1085,6 +1086,7 @@ class ViewResults(object):
         self._rows = [Row(row) for row in data['rows'] if not row.get('error')]
         self._total_rows = data.get('total_rows')
         self._offset = data.get('offset', 0)
+        self._update_seq = data.get('update_seq')
 
     @property
     def rows(self):
@@ -1119,6 +1121,14 @@ class ViewResults(object):
         if self._rows is None:
             self._fetch()
         return self._offset
+
+    @property
+    def update_seq(self):
+        """Curren update sequence of corresponding view. To get this value, you must query view with update_seq=True parameter. Otherwise, it will always be None"""
+        
+        if self._rows is None:
+            self._fetch()
+        return self._update_seq
 
 
 class Row(dict):
