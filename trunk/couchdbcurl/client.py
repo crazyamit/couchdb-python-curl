@@ -845,7 +845,7 @@ class Document(dict):
         """Save document. Document will be saved to database ``db`` or ``document._db``"""
         
         db = db or getattr(self, '_db', None)
-        if db:
+        if not db is None:
             db[self.id] = self
         else:
             raise Exception('Can\'t save document - target database is undefined')
