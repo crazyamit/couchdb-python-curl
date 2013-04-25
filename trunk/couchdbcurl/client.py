@@ -836,7 +836,10 @@ class Document(dict):
             raise AttributeError(u'Field %s is undefined in this document' % name)
 
     def __setattr__(self, name, value):
-        self[name] = value
+        if name == '_db':
+            super(mydict, self).__setattr__(name, value)
+        else:
+            self[name] = value
 
     def __delattr__(self, name):
         del(self[name])
