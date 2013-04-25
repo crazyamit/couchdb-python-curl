@@ -837,7 +837,7 @@ class Document(dict):
 
     def __setattr__(self, name, value):
         if name == '_db':
-            super(mydict, self).__setattr__(name, value)
+            super(Document, self).__setattr__(name, value)
         else:
             self[name] = value
 
