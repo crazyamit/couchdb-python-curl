@@ -803,6 +803,12 @@ class Document(dict):
         if '_db' in kwargs:
             self._db = kwargs['_db']
             del(kwargs['_db'])
+
+        # for subclassing (when __init__ receives Document as first argument), pass _db to result class
+        if len(args) and isinstance(args[0], Document):
+            if hasattr(args[0], '_db'):
+                self._db = args[0]._db
+            
         dict.__init__(self, *args, **kwargs)
     
     def __repr__(self):
