@@ -342,7 +342,7 @@ class Database(object):
         if not id:
             raise ResourceNotFound("Can't get document with empty id")
         
-        return Document(self.resource.get(id), _db = self)
+        return Document(self.resource.get(id), _db=self)
 
     def __setitem__(self, id, content):
         """Create or update a document with the specified ID.
@@ -354,12 +354,14 @@ class Database(object):
         """
         if not id:
             raise ResourceNotFound("Can't save document with empty id")
-        if '_db' in content:
-            del(content['_db'])
+        ## if '_db' in content:
+        ##     del(content['_db'])
         data = self.resource.put(id, content=content)
 
         if 'id' in data:
-            content.update({'_id': data['id'], '_rev': data['rev'], '_db': self})
+            content.update({'_id': data['id'], '_rev': data['rev']})
+            if isinstance(content, Document):
+                content._db = self
         
     @property
     def name(self):
@@ -701,8 +703,6 @@ class Database(object):
         docs = []
         for doc in documents:
             if isinstance(doc, dict):
-                if '_db' in doc:
-                    del(doc['_db'])
                 docs.append(doc)
             elif hasattr(doc, 'items'):
                 docs.append(dict(doc.items()))
