@@ -16,7 +16,7 @@ def pinger(entry):
     #print 'pinger started with entry:', entry
     try:
         db = Server(entry['server'])[entry['database']]
-        db.view('%s/%s' % (entry['design_doc'], entry['view_name']), limit=0).rows
+        db.view('%s/%s' % (entry['design_doc'], entry['view_name']), limit=0, stale='update_after').rows
     except:
         print "Some errors occured:", sys.exc_info()[1]
 
