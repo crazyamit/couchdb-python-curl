@@ -1,22 +1,34 @@
 #!/usr/bin/env python
 
+from pprint import pprint
 import sys
 import multiprocessing
 from urlparse import urlparse
 from optparse import OptionParser
+
+
 from couchdbcurl.client import Server
 
 
 
-def pinger(entry):
+def pinger(params):
     """Worker process.
     Will connect to entry['server'] and call entry['design_doc']/entry['view_name'] in database entry['database']
     """
+
+    entry, options = params
     
     #print 'pinger started with entry:', entry
     try:
         db = Server(entry['server'])[entry['database']]
-        db.view('%s/%s' % (entry['design_doc'], entry['view_name']), limit=0, stale='update_after').rows
+        params = {
+            'limit': 0,
+        }
+
+        if not options.sync:
+            params['stale'] = 'update_after'
+        
+        db.view('%s/%s' % (entry['design_doc'], entry['view_name']), **params).rows
     except:
         print "Some errors occured:", sys.exc_info()[1]
 
@@ -31,6 +43,7 @@ def main():
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Be verbose")
     parser.add_option("-p", "--threads", dest="threads", action="store", type="int", default=2, help="Threads count. Default: %default")
     parser.add_option("-t", "--timeout", dest="timeout", action="store", type="int", default=10, help="Script execution timeout. Default: %default")
+    parser.add_option("-s", "--sync", dest="sync", action="store_true", default=False, help="Synchronous view calls (without stale=update_after). Default: %default")
     
     (options, args) = parser.parse_args()
     
@@ -111,8 +124,8 @@ def main():
         print 'Initiating pool of %d workers' % (options.threads)
     
     pool = multiprocessing.Pool(options.threads)
-    
-    result = pool.map_async(pinger, entries)
+
+    result = pool.map_async(pinger, [(entry, options) for entry in entries])
     
     if options.verbose:
         print 'Waiting %d seconds for all jobs done' % options.timeout
