@@ -15,7 +15,6 @@ def pinger(params):
     """Worker process.
     Will connect to entry['server'] and call entry['design_doc']/entry['view_name'] in database entry['database']
     """
-
     entry, options = params
     
     #print 'pinger started with entry:', entry
@@ -33,26 +32,8 @@ def pinger(params):
         print "Some errors occured:", sys.exc_info()[1]
 
     return True
-    
 
-def main():
-    """
-    Entry point.
-    """
-    parser = OptionParser(usage=u"usage: %prog [options] url1 ... urlN")
-    parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Be verbose")
-    parser.add_option("-p", "--threads", dest="threads", action="store", type="int", default=2, help="Threads count. Default: %default")
-    parser.add_option("-t", "--timeout", dest="timeout", action="store", type="int", default=10, help="Script execution timeout. Default: %default")
-    parser.add_option("-s", "--sync", dest="sync", action="store_true", default=False, help="Synchronous view calls (without stale=update_after). Default: %default")
-    
-    (options, args) = parser.parse_args()
-    
-    entries = []
-
-    if not args:
-        parser.print_help()
-        sys.exit(3)
-    
+def entries(args, options):
     for entry in args:
         if options.verbose:
             print 'Parsing entry', entry
@@ -70,12 +51,12 @@ def main():
             if options.verbose:
                 print "  Single doc entry - %s:%s" % (database, design_doc)
             doc = _server[database]['_design/%s' % design_doc]
-            entries.append({
+            yield {
                 'server': server,
                 'database': database,
                 'design_doc': design_doc,
                 'view_name': doc['views'].keys()[0],
-            })
+            }, options
 
         elif len(path) == 1:
             database = path[0]
@@ -86,12 +67,12 @@ def main():
             
             for row in rows:
                 if 'views' in row.doc:
-                    entries.append({
+                    yield {
                         'server': server,
                         'database': database,
                         'design_doc': row.id.split('/')[1],
                         'view_name': row.doc['views'].keys()[0],
-                    })
+                    }, options
             
 
         elif len(path) == 0:
@@ -103,29 +84,42 @@ def main():
                 
                 for row in rows:
                     if 'views' in row.doc:
-                        entries.append({
+                        yield {
                             'server': server,
                             'database': db,
                             'design_doc': row.id.split('/')[1],
                             'view_name': row.doc['views'].keys()[0],
-                        })
+                        }, options
 
 
         else:
             raise Exception("Error parsing entry path %s" % (entry))
 
+    
 
-        
-    if options.verbose:
-        print 'Entries to ping (%d):' % len(entries)
-        pprint(entries)
+def main():
+    """
+    Entry point.
+    """
+    parser = OptionParser(usage=u"usage: %prog [options] url1 ... urlN")
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False, help="Be verbose")
+    parser.add_option("-p", "--threads", dest="threads", action="store", type="int", default=2, help="Threads count. Default: %default")
+    parser.add_option("-t", "--timeout", dest="timeout", action="store", type="int", default=10, help="Script execution timeout. Default: %default")
+    parser.add_option("-s", "--sync", dest="sync", action="store_true", default=False, help="Synchronous view calls (without stale=update_after). Default: %default")
+    
+    (options, args) = parser.parse_args()
+    
+    if not args:
+        parser.print_help()
+        sys.exit(3)
+    
 
     if options.verbose:
         print 'Initiating pool of %d workers' % (options.threads)
     
     pool = multiprocessing.Pool(options.threads)
-
-    result = pool.map_async(pinger, [(entry, options) for entry in entries])
+    
+    result = pool.map_async(pinger, entries(args, options), 1)
     
     if options.verbose:
         print 'Waiting %d seconds for all jobs done' % options.timeout
