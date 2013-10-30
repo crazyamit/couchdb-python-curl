@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-version = '1.1.5'
+version = '1.1.6'
 from setuptools import setup, find_packages
 if __name__ == '__main__':
     setup(name='couchdb-python-curl',
