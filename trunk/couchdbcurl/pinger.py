@@ -66,7 +66,7 @@ def entries(args, options):
             rows = [r for r in _server[database].view('_all_docs', startkey='_design/', endkey='_design0', include_docs=True).rows]
             
             for row in rows:
-                if 'views' in row.doc:
+                if row.doc and 'views' in row.doc:
                     yield {
                         'server': server,
                         'database': database,
@@ -83,7 +83,7 @@ def entries(args, options):
                 rows = [r for r in _server[db].view('_all_docs', startkey='_design/', endkey='_design0', include_docs=True).rows]
                 
                 for row in rows:
-                    if 'views' in row.doc:
+                    if row.doc and 'views' in row.doc:
                         yield {
                             'server': server,
                             'database': db,
